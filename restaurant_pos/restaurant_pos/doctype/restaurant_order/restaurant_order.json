@@ -32,7 +32,7 @@
    "fieldname": "table",
    "fieldtype": "Link",
    "label": "table",
-   "options": "Restaurant Order"
+   "options": "Restaurant Table"
   },
   {
    "fieldname": "customer",
@@ -100,7 +100,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-10-18 16:13:38.180353",
+ "modified": "2026-10-21 11:06:47.937878",
  "modified_by": "Administrator",
  "module": "Restaurant POS",
  "name": "Restaurant Order",

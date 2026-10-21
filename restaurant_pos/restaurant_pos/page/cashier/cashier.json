@@ -1,0 +1,14 @@
+{
+ "doctype": "Page",
+ "name": "cashier",
+ "page_name": "cashier",
+ "title": "Cashier",
+ "module": "Restaurant POS",
+ "standard": "Yes",
+ "system_page": 0,
+ "roles": [
+  {"role": "System Manager"},
+  {"role": "Sales User"},
+  {"role": "Sales Manager"}
+ ]
+}

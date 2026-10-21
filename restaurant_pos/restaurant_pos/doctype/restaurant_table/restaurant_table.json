@@ -3,10 +3,12 @@
  "allow_rename": 1,
  "creation": "2026-10-18 15:43:10.826161",
  "doctype": "DocType",
+ "autoname": "field:table_name",
  "engine": "InnoDB",
  "field_order": [
   "table_name",
   "area",
+  "capacity",
   "status",
   "current_order"
  ],
@@ -24,6 +26,12 @@
    "label": "Area",
    "options": "Indoor\nOutdoor\nVIP"
   },
+  {
+ "default": "4",
+ "fieldname": "capacity",
+ "fieldtype": "Int",
+ "label": "Capacity"
+},
   {
    "default": "Available",
    "fieldname": "status",
