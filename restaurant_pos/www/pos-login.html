@@ -1,0 +1,135 @@
+
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f8f5f0">
+    <title>Restaurant POS | Sign in</title>
+    <link rel="stylesheet" href="login.css">
+    <script src="login.js" defer></script>
+</head>
+<body>
+<main class="layout">
+
+    <section class="hero">
+        <div class="hero-shade"></div>
+
+        <header class="brand">
+            <span class="brand-mark">🍴</span>
+            <span>Restaurant <b>POS</b></span>
+        </header>
+
+        <div class="hero-content">
+            <p class="eyebrow">MADE FOR BUSY RESTAURANTS</p>
+            <h1>Better food.<br><span>Bigger smiles.</span></h1>
+            <p class="hero-copy">
+                Manage your restaurant with ease — from orders
+                to reports, all in one place.
+            </p>
+
+            <div class="features">
+                <div class="feature">
+                    <span class="feature-icon">♨</span>
+                    <div>
+                        <strong>Dine-in, takeaway & delivery</strong>
+                        <small>More options for your customers</small>
+                    </div>
+                </div>
+
+                <div class="feature">
+                    <span class="feature-icon">♨</span>
+                    <div>
+                        <strong>Live kitchen tickets</strong>
+                        <small>Keep your kitchen in sync</small>
+                    </div>
+                </div>
+
+                <div class="feature">
+                    <span class="feature-icon">▥</span>
+                    <div>
+                        <strong>Daily reports</strong>
+                        <small>Track sales and shift accounts</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="hero-footer">
+            <span class="footer-line"></span>
+            <span>Restaurant POS</span>
+            <span class="footer-tagline">Simple. Fast. Reliable.</span>
+        </footer>
+    </section>
+
+    <section class="panel">
+        <button class="theme-toggle" type="button"
+                aria-label="Switch theme" title="Switch theme">
+            <span class="theme-symbol">☾</span>
+            <span class="theme-text">Dark mode</span>
+        </button>
+
+        <form class="login-card" id="login-form" autocomplete="on">
+            <div class="mobile-brand brand">
+                <span class="brand-mark">🍴</span>
+                <span>Restaurant <b>POS</b></span>
+            </div>
+
+            <div class="card-heading">
+                <p class="card-kicker">YOUR WORKSPACE AWAITS</p>
+                <h2>Welcome back<span class="period">.</span></h2>
+                <p class="subtitle">
+                    Sign in to your workspace and get your shift started.
+                </p>
+            </div>
+
+            <div class="field">
+                <label for="username">USERNAME</label>
+                <div class="input-wrap">
+                    <span class="input-icon">♙</span>
+                    <input id="username" name="usr" type="text"
+                           placeholder="Enter your username"
+                           autocomplete="username"
+                           autocapitalize="none"
+                           spellcheck="false" required autofocus>
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="password">PASSWORD</label>
+                <div class="input-wrap">
+                    <span class="input-icon">⌑</span>
+                    <input id="password" name="pwd" type="password"
+                           placeholder="Enter your password"
+                           autocomplete="current-password" required>
+                    <button class="password-toggle" id="password-toggle"
+                            type="button" aria-label="Show password"
+                            aria-pressed="false">◉</button>
+                </div>
+            </div>
+
+            <div class="error-message" id="error-message"
+                 role="alert" hidden>
+                <span>!</span>
+                <span id="error-text"></span>
+            </div>
+
+            <button class="submit-button" id="submit-button" type="submit">
+                <span id="submit-label">Sign in to workspace</span>
+                <span class="arrow">→</span>
+            </button>
+
+            <div class="card-footer"><span>Restaurant POS</span></div>
+            <p class="mobile-note">Simple. Fast. Reliable.</p>
+        </form>
+    </section>
+</main>
+
+<div class="splash" id="welcome-splash" aria-live="polite">
+    <div class="splash-mark">🍴</div>
+    <h2>Welcome, <span id="welcome-name"></span></h2>
+    <p>Opening your workspace…</p>
+    <div class="progress"><span></span></div>
+</div>
+</body>
+</html>

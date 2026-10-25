@@ -1,0 +1,127 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:CS-{YYYY}-{#####}",
+ "creation": "2026-10-23 20:14:32.497212",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "cashier",
+  "settled_on",
+  "settled_by",
+  "invoice_count",
+  "total_sales",
+  "cash_total",
+  "card_total",
+  "counted_cash",
+  "difference",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "cashier",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Cashier",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "settled_on",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Settled On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "settled_by",
+   "fieldtype": "Link",
+   "label": "Settled By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "invoice_count",
+   "fieldtype": "Int",
+   "label": "Invoices",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_sales",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Total Sales",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cash_total",
+   "fieldtype": "Currency",
+   "label": "Cash",
+   "read_only": 1
+  },
+  {
+   "fieldname": "card_total",
+   "fieldtype": "Currency",
+   "label": "Card",
+   "read_only": 1
+  },
+  {
+   "fieldname": "counted_cash",
+   "fieldtype": "Currency",
+   "label": "Counted Cash",
+   "read_only": 1
+  },
+  {
+   "fieldname": "difference",
+   "fieldtype": "Currency",
+   "label": "Difference",
+   "read_only": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-10-23 20:14:32.497212",
+ "modified_by": "Administrator",
+ "module": "Restaurant POS",
+ "name": "Cashier Settlement",
+ "naming_rule": "Expression (old style)",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Restaurant Admin",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

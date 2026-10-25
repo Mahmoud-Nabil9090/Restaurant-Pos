@@ -1,0 +1,11 @@
+
+{
+ "doctype": "Page",
+ "name": "admin-panel",
+ "page_name": "admin-panel",
+ "title": "Admin Panel",
+ "module": "Restaurant POS",
+ "standard": "Yes",
+ "system_page": 0,
+ "roles": [{"role": "System Manager"}]
+}

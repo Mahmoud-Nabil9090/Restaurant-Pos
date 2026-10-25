@@ -5,3 +5,8 @@
 tags
 node_modules
 __pycache__
+__pycache__/
+*.pyc
+*.bak
+node_modules/
+.DS_Store

@@ -253,3 +253,14 @@ fixtures = [
         "filters": [["module", "=", "Restaurant POS"]],
     },
 ]
+
+website_redirects = [
+    {"source": "/login", "target": "/pos-login"},
+]
+
+home_page = "pos-login"
+
+boot_session = "restaurant_pos.auth.boot_session"
+
+app_include_css = "/assets/restaurant_pos/css/rp_theme.css"
+app_include_js = ["/assets/restaurant_pos/js/rp_app.js", "/assets/restaurant_pos/js/rp_bar.js"]

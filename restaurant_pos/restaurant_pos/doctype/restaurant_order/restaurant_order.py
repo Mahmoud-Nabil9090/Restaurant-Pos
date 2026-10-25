@@ -1,6 +1,3 @@
-# Copyright (c) 2026, mahmoud and contributors
-# For license information, please see license.txt
-
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -34,8 +31,12 @@ class RestaurantOrder(Document):
             )
 
     def calculate_totals(self):
-        total_qty = net_total = 0
+        total_qty = 0
+        net_total = 0
         for row in self.items:
+            if row.kitchen_status == "Cancelled":
+                row.amount = 0
+                continue
             row.amount = flt(row.qty) * flt(row.rate)
             total_qty += flt(row.qty)
             net_total += row.amount
