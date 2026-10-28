@@ -17,7 +17,7 @@ app_license = "mit"
 # 		"logo": "/assets/restaurant_pos/logo.png",
 # 		"title": "Restaurant POS",
 # 		"route": "/restaurant_pos",
-# 		"has_permission": "restaurant_pos.api.permission.has_app_permission"
+# 		"has_permission": "restaurant_pos.api.orders.permission.has_app_permission"
 # 	}
 # ]
 
@@ -232,7 +232,7 @@ app_license = "mit"
 # --------------------------------
 
 # auth_hooks = [
-# 	"restaurant_pos.auth.validate"
+# 	"restaurant_pos.api.auth.validate"
 # ]
 
 # Automatically update python controller files with type annotations for this app.
@@ -260,7 +260,7 @@ website_redirects = [
 
 home_page = "pos-login"
 
-boot_session = "restaurant_pos.auth.boot_session"
+boot_session = "restaurant_pos.api.auth.boot_session"
 
 app_include_css = "/assets/restaurant_pos/css/rp_theme.css"
 app_include_js = ["/assets/restaurant_pos/js/rp_app.js", "/assets/restaurant_pos/js/rp_bar.js"]

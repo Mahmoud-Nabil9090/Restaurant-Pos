@@ -5,7 +5,17 @@ CASHIER = "Restaurant Cashier"
 ADMIN = "Restaurant Admin"
 ADMIN_ROLE = ADMIN
 CASHIER_ROLE = CASHIER
-ROLE_SETS = {"cashier": [CASHIER], "admin": [ADMIN, CASHIER, "System Manager"]}
+
+# صلاحيات إضافية بتتدّي لكاشير معيّن من لوحة الأدمن (كل صلاحية = دور في Frappe). الأدمن عنده كلها تلقائيًا.
+# عشان تضيف صلاحية جديدة: 1) ضيفها هنا  2) ضيفها في AD_PERMS في ملف لوحة الأدمن (الـ JS)
+# 3) استخدم has_permission("اسمها") في المكان اللي عايز تحميه في الكود.
+PERMISSIONS = {"discount": "Restaurant Discount"}
+ROLE_SETS = {
+    "cashier": [CASHIER],
+    # الأدمن: أدوار المطعم + أدوار ERPNext اللازمة للأصناف والفواتير والتقارير
+    "admin": [ADMIN, CASHIER, "System Manager", "Accounts User", "Accounts Manager",
+              "Sales User", "Sales Manager", "Stock User", "Stock Manager", "Item Manager", "Report Manager"],
+}
 
 ADMIN_PAGE = "admin-panel"
 CASHIER_PAGE = "cashier"
@@ -13,7 +23,7 @@ CASHIER_PAGE = "cashier"
 
 def ensure_roles():
     """يعمل الدورين لو مش موجودين."""
-    for r in (CASHIER, ADMIN):
+    for r in (CASHIER, ADMIN, *PERMISSIONS.values()):
         if not frappe.db.exists("Role", r):
             frappe.get_doc({"doctype": "Role", "role_name": r, "desk_access": 1}).insert(ignore_permissions=True)
 
@@ -21,6 +31,12 @@ def ensure_roles():
 def is_admin(user=None):
     user = user or frappe.session.user
     return user == "Administrator" or ADMIN in frappe.get_roles(user)
+
+
+def has_permission(key, user=None):
+    """هل اليوزر أدمن، أو اتدّاله الصلاحية الإضافية دي؟ (من غير ما تطلع رسالة خطأ)."""
+    user = user or frappe.session.user
+    return is_admin(user) or PERMISSIONS[key] in frappe.get_roles(user)
 
 
 def require_admin():

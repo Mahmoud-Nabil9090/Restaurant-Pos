@@ -73,7 +73,7 @@ button { -webkit-tap-highlight-color: transparent; }
     background:
         linear-gradient(90deg, rgba(18,17,18,.88),
         rgba(18,17,18,.60) 65%, rgba(18,17,18,.30)),
-        url("/assets/restaurant_pos/restaurant-hero.webp") center center / cover no-repeat,
+        url("/assets/restaurant_pos/images/restaurant-hero.webp") center center / cover no-repeat,
         #29201c;
 }
 

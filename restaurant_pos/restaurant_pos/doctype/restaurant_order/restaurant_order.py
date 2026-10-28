@@ -31,6 +31,7 @@ class RestaurantOrder(Document):
             )
 
     def calculate_totals(self):
+        """الإجمالي = المجموع - الخصم (نسبة أو مبلغ) + الضريبة على الباقي بعد الخصم."""
         total_qty = 0
         net_total = 0
         for row in self.items:
@@ -41,9 +42,17 @@ class RestaurantOrder(Document):
             total_qty += flt(row.qty)
             net_total += row.amount
 
+        discount_pct = min(max(flt(self.get("discount_percent")), 0), 100)
+        tax_pct = min(max(flt(self.get("tax_percent")), 0), 100)
+        if discount_pct:
+            self.discount_amount = flt(net_total * discount_pct / 100, 2)
+        discount = min(max(flt(self.discount_amount), 0), net_total)
+        taxable = net_total - discount
+
         self.total_qty = total_qty
-        self.net_total = net_total
-        self.grand_total = max(net_total - flt(self.discount_amount), 0)
+        self.net_total = flt(net_total, 2)
+        self.tax_amount = flt(taxable * tax_pct / 100, 2)
+        self.grand_total = flt(taxable + self.tax_amount, 2)
 
     def on_update(self):
         self.sync_table_status()

@@ -1,10 +1,10 @@
 """يزوّد المنيو بـ 10 أصناف في كل تصنيف، ويعمل لكل صنف وتصنيف صورة.
 
 التشغيل:
-    bench --site mahmoud.local execute restaurant_pos.menu_seed.run
+    bench --site mahmoud.local execute restaurant_pos.setup.menu_seed.run
 
 لو عاوز تستبدل الصور الموجودة برسومات جديدة:
-    bench --site mahmoud.local execute restaurant_pos.menu_seed.run --kwargs "{'replace_images': 1}"
+    bench --site mahmoud.local execute restaurant_pos.setup.menu_seed.run --kwargs "{'replace_images': 1}"
 
 الأصناف الموجودة قبل كده بتفضل بأسعارها وصورها (إلا لو replace_images=1).
 """
@@ -12,7 +12,7 @@ import os
 
 import frappe
 
-from restaurant_pos import menu_art
+from restaurant_pos.setup import menu_art
 
 IMG_URL = "/assets/restaurant_pos/images/menu"
 

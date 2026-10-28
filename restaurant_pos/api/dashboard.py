@@ -7,7 +7,7 @@ import frappe
 from frappe import _
 from frappe.utils import flt, getdate, nowdate
 
-from restaurant_pos.auth import require_admin
+from restaurant_pos.api.auth import require_admin
 
 ORDER_TYPES = ("Dine In", "Takeaway", "Delivery")
 ACTIVE = ("Open", "Sent to Kitchen", "Served")
@@ -104,7 +104,7 @@ def end_day(date=None, close=0):
     if int(close):
         if still_open:
             frappe.throw(_("There are {0} open orders. Finish or cancel them before ending the day.").format(still_open))
-        from restaurant_pos.billing import settle_cashier, shift_summary
+        from restaurant_pos.api.billing import settle_cashier, shift_summary
 
         for c in out["cashiers"]:
             if c["user"] != "-" and shift_summary(c["user"])["invoice_count"]:

@@ -70,7 +70,7 @@
     // Get current Frappe user
     async function whoami() {
         const response = await fetch(
-            "/api/method/restaurant_pos.auth.whoami",
+            "/api/method/restaurant_pos.api.auth.whoami",
             {
                 credentials: "same-origin",
                 headers: { "Accept": "application/json" }

@@ -1,5 +1,5 @@
 import frappe
-from restaurant_pos.api import save_order, send_to_kitchen
+from restaurant_pos.api.orders import save_order, send_to_kitchen
 
 
 def run():

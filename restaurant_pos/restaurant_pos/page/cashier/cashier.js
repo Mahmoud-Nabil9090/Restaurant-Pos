@@ -13,12 +13,16 @@ frappe.pages["cashier"].on_page_show = function (wrapper) {
 	wrapper.cashier.open_from_route();
 };
 
+// الأدوار اللي مسموحلها تدّي خصم: الأدمن، أو كاشير اتدّاله صلاحية الخصم من لوحة الأدمن (والأدمن الأساسي Administrator)
+const RP_DISCOUNT_ROLES = ["Restaurant Admin", "Restaurant Discount"];
+
 const RP_TILE_COLORS = ["#ff8a3d", "#ffb703", "#e5484d", "#a8643a", "#5fa86b", "#e8693a", "#4c7bd9", "#d9619a", "#7bb661", "#8a5a3c"];
 
 class RestaurantCashier {
 	// المُنشئ: يجهّز الحالة (المنيو/الترابيزات/الأوردر)، يرسم الشاشة، ويسمع أحداث المطبخ realtime
 	constructor(wrapper) {
 		this.wrapper = wrapper;
+		this.cid = frappe.utils.get_random(10); // رقم الجهاز ده
 		this.page = wrapper.page;
 		this.menu = { groups: [], items: [] };
 		this.menu_loaded = false;
@@ -29,12 +33,54 @@ class RestaurantCashier {
 		this.form_values = null;
 		this.order = this.empty_order();
 		this.render_shell();
+		this.apply_discount_permission();
 		this.bind_events();
 		this.render_all();
 		this.load_menu();
 		this.load_tables();
 		frappe.realtime.on("kitchen_new_ticket", () => this.load_tables());
 		frappe.realtime.on("kitchen_item_cancelled", () => this.load_tables());
+		frappe.realtime.on("rp_orders_changed", (d) => this.on_remote_change(d));
+	}
+
+	// نداء للسيرفر بيبعت معاه رقم الجهاز (cid) عشان أحداثنا ما تعملش ريفريش لنفسنا
+	call(opts) {
+		opts.args = Object.assign({ cid: this.cid }, opts.args || {});
+		return frappe.call(opts);
+	}
+
+	// حدث جاى من جهاز تانى: نحدّث الترابيزات، ولو الأوردر المفتوح اتغيّر ننبّه الكاشير
+	on_remote_change(d) {
+		if (d && d.src && d.src === this.cid) return;
+		clearTimeout(this._rt);
+		this._rt = setTimeout(() => {
+			this.load_tables();
+			const o = this.order;
+			if (d && o.name && d.order === o.name) {
+				frappe.show_alert(
+					{
+						message:
+							__("This order was changed from another device") +
+							` <a data-action="rp_refresh" style="cursor:pointer;text-decoration:underline">${__("Refresh")}</a>`,
+						indicator: "orange",
+					},
+					12,
+					{ rp_refresh: () => this.reload_current() }
+				);
+			}
+		}, 300);
+	}
+
+	// يرجّع الأوردر الحالي من السيرفر (لو اتدفع/اتلغى بيفضّي الشاشة)
+	reload_current() {
+		const name = this.order && this.order.name;
+		if (!name) return;
+		this.call({
+			method: "restaurant_pos.api.orders.get_order",
+			args: { name },
+			callback: (r) => this.set_order(this.from_doc(r.message)),
+			error: () => this.set_order(this.empty_order("Dine In", null)),
+		});
 	}
 
 	/* ---------- state helpers ---------- */
@@ -95,8 +141,8 @@ class RestaurantCashier {
 		const name = frappe.route_options && frappe.route_options.order;
 		if (!name) return;
 		frappe.route_options = null;
-		frappe.call({
-			method: "restaurant_pos.api.get_order",
+		this.call({
+			method: "restaurant_pos.api.orders.get_order",
 			args: { name },
 			callback: (r) => this.set_order(this.from_doc(r.message)),
 		});
@@ -112,6 +158,16 @@ class RestaurantCashier {
 		});
 	}
 
+	// هل اليوزر ده أدمن/مدير وينفع يدّي خصم؟ (السيرفر بيتأكد برضه، ده بس لإخفاء الأزرار)
+	can_discount() {
+		return frappe.session.user === "Administrator" || RP_DISCOUNT_ROLES.some((r) => frappe.user.has_role(r));
+	}
+
+	// يخفي صف أزرار الخصم عن الكاشير العادي
+	apply_discount_permission() {
+		this.$root.find('.rp-chips[data-kind="discount_percent"]').closest(".rp-adj-row").toggle(this.can_discount());
+	}
+
 	/* ---------- shell ---------- */
 
 	// يرسم الهيكل الثابت للصفحة (الستايل في ملف cashier.css)
@@ -125,10 +181,14 @@ class RestaurantCashier {
 					<div class="rp-custbox"></div>
 					<div class="rp-cart"></div>
 					<div class="rp-totals">
+						<div class="rp-adj rp-discount-tax">
+							<div class="rp-adj-row"><span class="rp-adj-label">${__("Discount")} %</span><span class="rp-chips" data-kind="discount_percent">${[10, 20, 30, 40, 50].map((v) => `<button class="rp-chip" data-v="${v}">${v}</button>`).join("")}</span></div>
+							<div class="rp-adj-row"><span class="rp-adj-label">${__("Tax")} %</span><span class="rp-chips" data-kind="tax_percent">${[10, 14, 15, 20].map((v) => `<button class="rp-chip" data-v="${v}">${v}</button>`).join("")}</span></div>
+							<div class="rp-breakdown"></div>
+						</div>
 						<div class="rp-total"><span>${__("Total")}</span><span class="rp-sum">0.00</span></div>
 					</div>
 					<div class="rp-actions">
-						<button class="rp-save">${__("Save")}</button>
 						<button class="rp-send">${__("Send to Kitchen")}</button>
 						<button class="rp-pay">${__("Pay")}</button>
 						<button class="rp-cancel">${__("Cancel Order")}</button>
@@ -173,7 +233,10 @@ class RestaurantCashier {
 		r.on("click", ".rp-form-ok", () => this.submit_customer());
 		r.on("click", ".rp-form-cancel", () => this.cancel_form());
 		r.on("click", ".rp-board", () => frappe.set_route("delivery-orders"));
-		r.on("click", ".rp-save", () => this.save());
+		r.on("click", ".rp-chip", (e) => {
+			const el = $(e.currentTarget);
+			this.toggle_adjust(el.closest(".rp-chips").data("kind"), Number(el.data("v")));
+		});
 		r.on("click", ".rp-send", () => this.send());
 		r.on("click", ".rp-pay", () => this.pay());
 		r.on("click", ".rp-cancel", () => this.cancel());
@@ -183,8 +246,8 @@ class RestaurantCashier {
 
 	// تحميل المنيو (التصنيفات والأصناف والصور) من السيرفر
 	load_menu() {
-		frappe.call({
-			method: "restaurant_pos.api.get_menu",
+		this.call({
+			method: "restaurant_pos.api.orders.get_menu",
 			callback: (r) => {
 				this.menu = r.message;
 				this.menu_loaded = true;
@@ -196,8 +259,8 @@ class RestaurantCashier {
 
 	// تحميل حالة الترابيزات وتحديث عداد الأوردرات المفتوحة
 	load_tables() {
-		frappe.call({
-			method: "restaurant_pos.api.get_tables",
+		this.call({
+			method: "restaurant_pos.api.orders.get_tables",
 			callback: (r) => {
 				this.tables = r.message || [];
 				this.tables_loaded = true;
@@ -422,7 +485,7 @@ class RestaurantCashier {
 			})
 			.join("");
 		this.$root.find(".rp-cart").html(lines || `<div class="rp-empty">${__("No items yet")}</div>`);
-		this.$root.find(".rp-sum").text(this.money(sum));
+		this.show_totals(sum);
 	}
 
 	/* ---------- order type / table / delivery form ---------- */
@@ -437,8 +500,8 @@ class RestaurantCashier {
 	select_table(name) {
 		const t = this.tables.find((x) => x.name === name);
 		if (t && t.current_order) {
-			frappe.call({
-				method: "restaurant_pos.api.get_order",
+			this.call({
+				method: "restaurant_pos.api.orders.get_order",
 				args: { name: t.current_order },
 				callback: (r) => this.set_order(this.from_doc(r.message)),
 			});
@@ -459,8 +522,8 @@ class RestaurantCashier {
 	lookup_customer(raw) {
 		const phone = (raw || "").replace(/\D/g, "");
 		if (phone.length < 8) return;
-		frappe.call({
-			method: "restaurant_pos.api.get_customer",
+		this.call({
+			method: "restaurant_pos.api.orders.get_customer",
 			args: { phone },
 			callback: (r) => {
 				const msg = this.$root.find(".rp-form-msg");
@@ -488,8 +551,8 @@ class RestaurantCashier {
 			msg.addClass("err").text(__("Phone, name and address are required"));
 			return;
 		}
-		frappe.call({
-			method: "restaurant_pos.api.save_customer",
+		this.call({
+			method: "restaurant_pos.api.orders.save_customer",
 			args: { data: JSON.stringify(data) },
 			freeze: true,
 			callback: (r) => {
@@ -519,9 +582,12 @@ class RestaurantCashier {
 	from_doc(doc) {
 		return {
 			name: doc.name,
+			modified: doc.modified,
 			order_type: doc.order_type,
 			table: doc.table,
 			status: doc.status,
+			discount_percent: doc.discount_percent || 0,
+			tax_percent: doc.tax_percent || 0,
 			customer_info: doc.customer_info || null,
 			driver: doc.driver || null,
 			items: (doc.items || []).map((r) => ({
@@ -600,11 +666,12 @@ class RestaurantCashier {
 			{
 				fieldname: "reason",
 				fieldtype: "Data",
-				label: __("Reason (optional)"),
+				label: __("Reason"),
+				reqd: 1,
 			},
 			(v) => {
-				frappe.call({
-					method: "restaurant_pos.api.cancel_item",
+				this.call({
+					method: "restaurant_pos.api.orders.cancel_item",
 					args: { name: this.order.name, row_name: row.name, reason: v.reason || "" },
 					freeze: true,
 					callback: (r) => {
@@ -636,12 +703,47 @@ class RestaurantCashier {
 		);
 	}
 
+	// حساب المجموع والخصم والضريبة والإجمالي (نفس معادلة السيرفر: الخصم الأول وبعدين الضريبة)
+	calc_totals(sum) {
+		const o = this.order;
+		const round = (x) => Math.round((x + Number.EPSILON) * 100) / 100;
+		const discount = round((sum * (o.discount_percent || 0)) / 100);
+		const tax = round(((sum - discount) * (o.tax_percent || 0)) / 100);
+		return { sum, discount, tax, total: round(sum - discount + tax) };
+	}
+
+	// عرض التفاصيل (مجموع/خصم/ضريبة) والإجمالي وتفعيل الشريحة المختارة
+	show_totals(sum) {
+		const t = this.calc_totals(sum);
+		const o = this.order;
+		const rows = [];
+		if (t.discount || t.tax) rows.push(`<div><span>${__("Subtotal")}</span><span>${this.esc(this.money(t.sum))}</span></div>`);
+		if (t.discount) rows.push(`<div><span>${__("Discount")} ${o.discount_percent}%</span><span>− ${this.esc(this.money(t.discount))}</span></div>`);
+		if (t.tax) rows.push(`<div><span>${__("Tax")} ${o.tax_percent}%</span><span>+ ${this.esc(this.money(t.tax))}</span></div>`);
+		this.$root.find(".rp-breakdown").html(rows.join(""));
+		this.$root.find(".rp-chips").each((_, el) => {
+			const kind = $(el).data("kind");
+			$(el).find(".rp-chip").each((__i, b) => $(b).toggleClass("active", Number($(b).data("v")) === (o[kind] || 0)));
+		});
+		this.$root.find(".rp-sum").text(this.money(t.total));
+	}
+
+	// دوس على نسبة تتفعّل، دوس عليها تاني تتلغي
+	toggle_adjust(kind, value) {
+		if (kind === "discount_percent" && !this.can_discount()) return; // الخصم للأدمن والمدير بس
+		this.order[kind] = this.order[kind] === value ? 0 : value;
+		this.render_cart();
+	}
+
 	// تجهيز بيانات الأوردر لإرسالها للسيرفر
 	payload() {
 		const c = this.order.customer_info;
 		return JSON.stringify({
 			name: this.order.name,
+			modified: this.order.modified || null,
 			order_type: this.order.order_type,
+			discount_percent: this.order.discount_percent || 0,
+			tax_percent: this.order.tax_percent || 0,
 			table: this.order.table,
 			delivery_customer: c ? c.name || c.phone : null,
 			items: this.order.items.map((r) => ({ name: r.name, item: r.item, qty: r.qty, notes: r.notes })),
@@ -654,9 +756,10 @@ class RestaurantCashier {
 			frappe.show_alert({ message: __("Add items first"), indicator: "orange" });
 			return;
 		}
-		frappe.call({
-			method: "restaurant_pos.api.save_order",
+		this.call({
+			method: "restaurant_pos.api.orders.save_order",
 			args: { order: this.payload() },
+			error: () => this.reload_current(),
 			freeze: true,
 			callback: (r) => {
 				this.order = this.from_doc(r.message);
@@ -672,8 +775,8 @@ class RestaurantCashier {
 	// إرسال الأصناف الجديدة للمطبخ
 	send() {
 		this.save(() => {
-			frappe.call({
-				method: "restaurant_pos.api.send_to_kitchen",
+			this.call({
+				method: "restaurant_pos.api.orders.send_to_kitchen",
 				args: { name: this.order.name },
 				freeze: true,
 				callback: (r) => {
@@ -699,30 +802,34 @@ class RestaurantCashier {
 		}
 		const type = this.order.order_type; // نفس نوع الطلب يفضل بعد الدفع (تيك أواى -> أوردر تيك أواى جديد)
 		this.save(() => {
-			frappe.call({
-				method: "restaurant_pos.billing.pay_order",
-				args: { name: this.order.name, mode_of_payment: "Cash" },
+			this.call({
+				method: "restaurant_pos.api.billing.pay_order",
+				args: { name: this.order.name, mode_of_payment: "Cash", modified: this.order.modified },
 				freeze: true,
 				callback: (r) => {
 					const inv = r.message.invoice;
 					this.set_order(this.empty_order(type, null));
 					this.load_tables();
 					frappe.show_alert({ message: __("Paid. Invoice {0}", [inv]), indicator: "green" }, 6);
-					this.print_receipt(inv);
+					this.print_receipt(r.message.order.name);
 				},
 			});
 		});
 	}
 
 	// طباعة إيصال الفاتورة من غير ما نفتح صفحة جديدة (iframe مخفي بيشغّل الطباعة)
-	print_receipt(inv) {
-		const url =
-			`/printview?doctype=Sales%20Invoice&name=${encodeURIComponent(inv)}` +
-			`&format=POS%20Invoice&no_letterhead=1&trigger_print=1`;
-		$("#rp-print-frame").remove();
-		$('<iframe id="rp-print-frame" style="position:fixed;right:0;bottom:0;width:0;height:0;border:0"></iframe>')
-			.attr("src", url)
-			.appendTo("body");
+	// يطبع الإيصال على طول من غير شاشة الطباعة (iframe مخفي؛ والمتصفح لازم يكون مفتوح بـ --kiosk-printing)
+	print_receipt(name) {
+		frappe.call({
+			method: "restaurant_pos.api.receipt.render_html",
+			args: { name, autoprint: 1 },
+			callback: (r) => {
+				$("#rp-print-frame").remove();
+				$('<iframe id="rp-print-frame" style="position:fixed;right:0;bottom:0;width:0;height:0;border:0"></iframe>')
+					.attr("srcdoc", r.message)
+					.appendTo("body");
+			},
+		});
 	}
 
 	// إلغاء الأوردر الحالي
@@ -731,16 +838,21 @@ class RestaurantCashier {
 			this.set_order(this.empty_order(this.order.order_type, null, this.order.customer_info));
 			return;
 		}
-		frappe.confirm(__("Cancel order {0}?", [this.order.name]), () => {
-			frappe.call({
-				method: "restaurant_pos.api.cancel_order",
-				args: { name: this.order.name },
-				callback: () => {
-					const t = this.order.order_type === "Delivery" ? "Dine In" : this.order.order_type;
-					this.set_order(this.empty_order(t, null));
-					this.load_tables();
-				},
-			});
-		});
+		frappe.prompt(
+			{ fieldname: "reason", fieldtype: "Small Text", label: __("Cancel reason"), reqd: 1 },
+			(v) => {
+				this.call({
+					method: "restaurant_pos.api.orders.cancel_order",
+					args: { name: this.order.name, reason: v.reason },
+					callback: () => {
+						const t = this.order.order_type === "Delivery" ? "Dine In" : this.order.order_type;
+						this.set_order(this.empty_order(t, null));
+						this.load_tables();
+					},
+				});
+			},
+			__("Cancel order {0}?", [this.order.name]),
+			__("Cancel Order")
+		);
 	}
 }

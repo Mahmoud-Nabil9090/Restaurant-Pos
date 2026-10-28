@@ -8,7 +8,7 @@ import frappe
 from frappe import _
 from frappe.utils import cint, flt
 
-from restaurant_pos.auth import require_admin
+from restaurant_pos.api.auth import require_admin
 
 ROOT_GROUP = "All Item Groups"
 

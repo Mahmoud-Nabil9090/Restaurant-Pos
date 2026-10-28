@@ -1,12 +1,17 @@
-.DS_Store
-*.pyc
+
+# أسرار محلية
+*.bak
+*.bak*
 *.egg-info
+*.local.json
+*.pyc
 *.swp
-tags
-node_modules
+.DS_Store
 __pycache__
 __pycache__/
-*.pyc
-*.bak
+node_modules
 node_modules/
-.DS_Store
+restaurant_pos/public/dist/
+restaurant_pos/public/receipt_preview/
+tags
+users.local.json

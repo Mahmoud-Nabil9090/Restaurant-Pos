@@ -103,3 +103,15 @@ body[data-route="cashier"] .page-body, body[data-route="cashier"] .layout-main {
 	.rp-types { flex-direction: row; }
 	.rp-type { flex: 1; }
 }
+
+/* ===== rp-discount-tax: شرائح الخصم والضريبة (بديل زرار Save) ===== */
+.rp-adj { display: flex; flex-direction: column; gap: 6px; padding: 8px 0 6px; }
+.rp-adj-row { display: flex; align-items: center; gap: 8px; }
+.rp-adj-label { min-width: 78px; font-size: 12px; font-weight: 600; color: #6b6b6b; }
+.rp-chips { display: flex; gap: 6px; flex: 1; }
+.rp-chip { flex: 1; padding: 6px 0; border: 1px solid #e3e3e3; border-radius: 8px; background: #fff;
+  font-weight: 700; font-size: 13px; cursor: pointer; }
+.rp-chip:hover { border-color: #c81e1e; }
+.rp-chip.active { background: #c81e1e; border-color: #c81e1e; color: #fff; }
+.rp-breakdown > div { display: flex; justify-content: space-between; font-size: 13px; color: #555; padding: 1px 0; }
+.rp-actions .rp-send { grid-column: 1 / -1; flex: 1 1 100%; width: 100%; }

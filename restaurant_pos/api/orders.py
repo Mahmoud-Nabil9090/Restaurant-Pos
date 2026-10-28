@@ -3,9 +3,9 @@ import re
 
 import frappe
 from frappe import _
-from frappe.utils import flt
+from frappe.utils import flt, get_datetime
 
-from restaurant_pos.auth import require_admin
+from restaurant_pos.api.auth import has_permission, require_admin
 
 CUSTOMER_FIELDS = [
     "name", "customer_name", "phone", "phone2", "address",
@@ -26,6 +26,41 @@ def _order_dict(doc):
             "Restaurant Customer", customer, CUSTOMER_FIELDS, as_dict=True
         )
     return d
+
+
+def _notify(doc, action):
+    """يبلّغ كل الأجهزة المفتوحة إن أوردر اتغيّر (بعد ما التعديل يتسجّل فعلًا في الداتابيز).
+    src = رقم الجهاز اللي عمل التغيير، عشان نفس الجهاز ما يعملش ريفريش لنفسه."""
+    frappe.publish_realtime(
+        "rp_orders_changed",
+        {
+            "order": doc.name,
+            "action": action,
+            "table": doc.get("table"),
+            "order_type": doc.get("order_type"),
+            "src": frappe.form_dict.get("cid"),
+        },
+        after_commit=True,
+    )
+
+
+def _lock_and_check(name, modified=None):
+    """يقفل صف الأوردر لحد آخر الطلب (عشان جهازين ما يكتبوش فوق بعض)،
+    ولو الجهاز باعت modified قديم يرفض: معناه الأوردر اتغيّر من جهاز تاني."""
+    current = frappe.db.get_value("Restaurant Order", name, "modified", for_update=True)
+    if current is None:
+        frappe.throw(_("Order {0} not found").format(name))
+    if modified and get_datetime(current) != get_datetime(modified):
+        frappe.throw(
+            _("This order was changed from another device. Refresh it and try again."),
+            title=_("Order changed"),
+        )
+
+
+def _can_discount():
+    """هل اليوزر الحالي يقدر يدّي خصم؟ الأدمن دايمًا، أو كاشير اتدّاله صلاحية "discount" من لوحة الأدمن.
+    (بنقرا الأدوار مباشرة عشان ما نطلعش رسالة خطأ للكاشير.)"""
+    return has_permission("discount")
 
 
 @frappe.whitelist()
@@ -100,22 +135,44 @@ def get_order(name):
 
 @frappe.whitelist()
 def save_order(order):
-    """إنشاء أو تعديل أوردر. order = JSON فيه items كل صنف فيه item و qty و notes."""
+    """إنشاء أو تعديل أوردر. order = JSON فيه items كل صنف فيه item و qty و notes.
+    لو الأوردر موجود لازم يبعت modified اللي شافه، ولو اتغيّر من جهاز تاني بيترفض."""
     data = json.loads(order) if isinstance(order, str) else order
 
     if data.get("name"):
+        _lock_and_check(data["name"], data.get("modified"))
         doc = frappe.get_doc("Restaurant Order", data["name"])
         if doc.status in ("Billed", "Cancelled"):
             frappe.throw(_("Order {0} is already {1}").format(doc.name, doc.status))
+        is_new = False
     else:
         doc = frappe.new_doc("Restaurant Order")
         doc.waiter = frappe.session.user
         doc.company = frappe.defaults.get_global_default("company")
+        is_new = True
 
     doc.order_type = data.get("order_type") or "Dine In"
     doc.table = data.get("table")
+
+    if is_new and doc.order_type == "Dine In" and doc.table:
+        # جهازين يفتحوا نفس الترابيزة في نفس اللحظة: الأول بس يعدّي
+        current = frappe.db.get_value("Restaurant Table", doc.table, "current_order", for_update=True)
+        if current and frappe.db.get_value("Restaurant Order", current, "status") not in (
+            None, "Billed", "Cancelled"
+        ):
+            frappe.throw(
+                _("Table {0} already has an open order ({1}). Refresh and open it.").format(
+                    doc.table, current
+                )
+            )
+
     doc.customer = data.get("customer")
-    doc.discount_amount = flt(data.get("discount_amount"))
+    # الخصم للأدمن/المدير بس. الكاشير العادي: القيمة بتفضل زي ما هي (صفر للأوردر الجديد،
+    # أو الخصم اللي الأدمن حطّه قبل كده)، وأي خصم جاي منه بيتتجاهل.
+    if _can_discount():
+        doc.discount_amount = flt(data.get("discount_amount"))
+        doc.discount_percent = min(max(flt(data.get("discount_percent")), 0), 100)
+    doc.tax_percent = min(max(flt(data.get("tax_percent")), 0), 100)
 
     if doc.order_type == "Delivery":
         if not data.get("delivery_customer"):
@@ -147,12 +204,14 @@ def save_order(order):
         )
 
     doc.save()
+    _notify(doc, "created" if is_new else "updated")
     return _order_dict(doc)
 
 
 @frappe.whitelist()
 def send_to_kitchen(name):
     """يعلّم الأصناف الجديدة كمبعوتة للمطبخ، وينبّه شاشة المطبخ realtime."""
+    _lock_and_check(name)
     doc = frappe.get_doc("Restaurant Order", name)
     new_rows = [r for r in doc.items if not r.sent_to_kitchen]
     if not new_rows:
@@ -179,13 +238,19 @@ def send_to_kitchen(name):
             ],
         },
     )
+    _notify(doc, "sent")
     return _order_dict(doc)
 
 
 @frappe.whitelist()
 def cancel_item(name, row_name, reason=None):
+    """يلغي صنف اتبعت للمطبخ قبل كده (أدمن بس، والسبب إجباري ومتسجّل)، وينبّه المطبخ realtime."""
     require_admin()
-    """يلغي صنف اتبعت للمطبخ قبل كده، وينبّه المطبخ realtime."""
+    reason = (reason or "").strip()
+    if not reason:
+        frappe.throw(_("Please enter a cancellation reason"))
+
+    _lock_and_check(name)
     doc = frappe.get_doc("Restaurant Order", name)
     if doc.status in ("Billed", "Cancelled"):
         frappe.throw(_("Order {0} is already {1}").format(doc.name, doc.status))
@@ -200,6 +265,12 @@ def cancel_item(name, row_name, reason=None):
 
     row.kitchen_status = "Cancelled"
     doc.save()
+    doc.add_comment(
+        "Comment",
+        _("Item cancelled by {0}: {1} x {2}. Reason: {3}").format(
+            frappe.session.user, row.item_name, row.qty, reason
+        ),
+    )
 
     frappe.publish_realtime(
         "kitchen_item_cancelled",
@@ -210,18 +281,31 @@ def cancel_item(name, row_name, reason=None):
             "item_name": row.item_name,
             "qty": row.qty,
             "station": row.kitchen_station,
-            "reason": (reason or "").strip(),
+            "reason": reason,
         },
     )
+    _notify(doc, "item_cancelled")
     return _order_dict(doc)
 
 
 @frappe.whitelist()
-def cancel_order(name):
+def cancel_order(name, reason=None):
+    """يلغي أوردر كامل (أدمن بس، والسبب إجباري ومتسجّل كتعليق على الأوردر)."""
     require_admin()
+    reason = (reason or "").strip()
+    if not reason:
+        frappe.throw(_("Please enter a cancellation reason"))
+
+    _lock_and_check(name)
     doc = frappe.get_doc("Restaurant Order", name)
     if doc.status == "Billed":
         frappe.throw(_("Cannot cancel a billed order"))
+    if doc.status == "Cancelled":
+        frappe.throw(_("Order {0} is already {1}").format(doc.name, doc.status))
     doc.status = "Cancelled"
     doc.save()
+    doc.add_comment(
+        "Comment", _("Order cancelled by {0}. Reason: {1}").format(frappe.session.user, reason)
+    )
+    _notify(doc, "cancelled")
     return _order_dict(doc)

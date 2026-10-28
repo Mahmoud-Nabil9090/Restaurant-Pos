@@ -24,6 +24,7 @@ class DeliveryBoard {
 		this.date = frappe.datetime.get_today();
 		this.render_shell();
 		this.bind_events();
+		frappe.realtime.on("rp_orders_changed", () => this.on_remote_change());
 		this.page.set_primary_action(__("New Delivery Order"), () => frappe.set_route("cashier"));
 		if (frappe.user.has_role("Restaurant Admin"))
 		this.page.add_inner_button(__("New Driver"), () => frappe.new_doc("Delivery Driver"));
@@ -114,6 +115,7 @@ class DeliveryBoard {
 			this.view = $(e.currentTarget).data("view");
 			this.refresh();
 		});
+		r.on("click", ".dv-print", (e) => this.print_receipt($(e.currentTarget).data("name")));
 		r.on("click", ".dv-edit", (e) => {
 			frappe.route_options = { order: $(e.currentTarget).data("name") };
 			frappe.set_route("cashier");
@@ -149,7 +151,7 @@ class DeliveryBoard {
 			const driver = $(e.currentTarget).data("driver");
 			frappe.confirm(__("Settle {0} for {1}?", [driver, this.date]), () => {
 				frappe.call({
-					method: "restaurant_pos.delivery.settle_driver",
+					method: "restaurant_pos.api.delivery.settle_driver",
 					args: { driver, date: this.date },
 					freeze: true,
 					callback: (res) => {
@@ -164,7 +166,7 @@ class DeliveryBoard {
 
 	call(method, args, done_msg) {
 		frappe.call({
-			method: `restaurant_pos.delivery.${method}`,
+			method: `restaurant_pos.api.delivery.${method}`,
 			args,
 			freeze: true,
 			callback: () => {
@@ -174,10 +176,32 @@ class DeliveryBoard {
 		});
 	}
 
+	// أى جهاز غيّر أوردر: نحدّث الشاشة (لو هى الظاهرة، ومن غير ما نبوّظ اختيار سواق لسه ما اتأكدش)
+	on_remote_change() {
+		if (!$(this.wrapper).is(":visible")) return;
+		if (this.$root.find(".dv-driver").filter((_, el) => $(el).val()).length) return;
+		clearTimeout(this._rt);
+		this._rt = setTimeout(() => this.refresh(), 400);
+	}
+
+	// يطبع إيصال الأوردر على طول (iframe مخفي)
+	print_receipt(name) {
+		frappe.call({
+			method: "restaurant_pos.api.receipt.render_html",
+			args: { name, autoprint: 1 },
+			callback: (r) => {
+				$("#rp-print-frame").remove();
+				$('<iframe id="rp-print-frame" style="position:fixed;right:0;bottom:0;width:0;height:0;border:0"></iframe>')
+					.attr("srcdoc", r.message)
+					.appendTo("body");
+			},
+		});
+	}
+
 	refresh() {
 		this.render_tabs();
 		frappe.call({
-			method: "restaurant_pos.delivery.get_drivers",
+			method: "restaurant_pos.api.delivery.get_drivers",
 			callback: (r) => {
 				this.drivers = r.message || [];
 				if (this.tab === "orders") this.load_orders();
@@ -219,7 +243,7 @@ class DeliveryBoard {
 
 	load_orders() {
 		frappe.call({
-			method: "restaurant_pos.delivery.get_delivery_orders",
+			method: "restaurant_pos.api.delivery.get_delivery_orders",
 			args: { view: this.view, date: this.date },
 			callback: (r) => {
 				this.orders = r.message || [];
@@ -230,7 +254,7 @@ class DeliveryBoard {
 
 	load_summary() {
 		frappe.call({
-			method: "restaurant_pos.delivery.driver_summary",
+			method: "restaurant_pos.api.delivery.driver_summary",
 			args: { date: this.date },
 			callback: (r) => {
 				this.summary = r.message || [];
@@ -289,7 +313,7 @@ class DeliveryBoard {
 				}
 
 				return `<tr>
-					<td><b>${this.esc(o.name)}</b><br><span class="dv-muted">${this.esc(moment(o.creation).format("DD MMM HH:mm"))}</span></td>
+					<td><b>${this.esc(o.name)}</b><br><span class="dv-muted">${this.esc(moment(o.creation).format("DD MMM HH:mm"))}</span><br><button class="dv-btn dv-print" data-name="${this.esc(o.name)}" title="${__("Print")}">🖨</button></td>
 					<td>${customer}</td>
 					<td class="dv-addr">${address}</td>
 					<td>${items}</td>

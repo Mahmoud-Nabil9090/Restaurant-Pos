@@ -2,6 +2,8 @@ import frappe
 from frappe import _
 from frappe.utils import getdate, now_datetime
 
+from restaurant_pos.api.orders import _notify
+
 CUSTOMER_FIELDS = [
     "name", "customer_name", "phone", "phone2", "address",
     "building_details", "floor", "notes",
@@ -41,6 +43,63 @@ def _order_row(doc):
     }
 
 
+def _rows(names):
+    """نفس شكل _order_row لعدة أوردرات مرة واحدة: 3 استعلامات بس بدل استعلامات لكل أوردر."""
+    names = list(names)
+    if not names:
+        return []
+
+    orders = frappe.get_all(
+        "Restaurant Order",
+        filters={"name": ["in", names]},
+        fields=[
+            "name", "creation", "status", "delivery_status", "driver", "assigned_on",
+            "delivered_on", "driver_settled", "grand_total", "delivery_customer",
+        ],
+    )
+
+    child = frappe.get_meta("Restaurant Order").get_field("items").options
+    items = {}
+    for r in frappe.db.sql(
+        f"""select parent, item_name, qty, notes, kitchen_status from `tab{child}`
+            where parenttype = 'Restaurant Order' and parent in %(names)s order by idx""",
+        {"names": tuple(names)},
+        as_dict=True,
+    ):
+        items.setdefault(r.parent, []).append(
+            {"item_name": r.item_name, "qty": r.qty, "notes": r.notes, "kitchen_status": r.kitchen_status}
+        )
+
+    cust_names = list({o.delivery_customer for o in orders if o.delivery_customer})
+    customers = {}
+    if cust_names:
+        customers = {
+            c.name: c
+            for c in frappe.get_all(
+                "Restaurant Customer", filters={"name": ["in", cust_names]}, fields=CUSTOMER_FIELDS
+            )
+        }
+
+    pos = {n: i for i, n in enumerate(names)}
+    orders.sort(key=lambda o: pos[o.name])
+    return [
+        {
+            "name": o.name,
+            "creation": o.creation,
+            "status": o.status,
+            "delivery_status": o.delivery_status or "Pending",
+            "driver": o.driver,
+            "assigned_on": o.assigned_on,
+            "delivered_on": o.delivered_on,
+            "driver_settled": o.driver_settled or 0,
+            "grand_total": o.grand_total,
+            "customer": customers.get(o.delivery_customer),
+            "items": items.get(o.name, []),
+        }
+        for o in orders
+    ]
+
+
 def _get_delivery_order(name):
     doc = frappe.get_doc("Restaurant Order", name)
     if doc.order_type != "Delivery":
@@ -71,7 +130,7 @@ def get_delivery_orders(view="active", date=None):
     names = frappe.get_all(
         "Restaurant Order", filters=filters, pluck="name", order_by="creation desc", limit_page_length=300
     )
-    rows = [_order_row(frappe.get_doc("Restaurant Order", n)) for n in names]
+    rows = _rows(names)
 
     wanted = {
         "active": ("Pending", "Out for Delivery"),
@@ -98,6 +157,7 @@ def assign_driver(name, driver):
     doc.delivery_status = "Out for Delivery"
     doc.assigned_on = now_datetime()
     doc.save()
+    _notify(doc, "driver_assigned")
     return _order_row(doc)
 
 
@@ -113,6 +173,7 @@ def unassign_driver(name):
     doc.delivery_status = "Pending"
     doc.assigned_on = None
     doc.save()
+    _notify(doc, "driver_unassigned")
     return _order_row(doc)
 
 
@@ -129,6 +190,7 @@ def mark_delivered(name):
     if doc.status in ("Open", "Sent to Kitchen"):
         doc.status = "Served"
     doc.save()
+    _notify(doc, "delivered")
     return _order_row(doc)
 
 
@@ -152,8 +214,7 @@ def driver_summary(date=None):
     """حساب كل دليفري مان في يوم معيّن (حسب تاريخ تحميل الأوردر عليه)."""
     day = getdate(date)
     out = {}
-    for n in _day_orders(day):
-        row = _order_row(frappe.get_doc("Restaurant Order", n))
+    for row in _rows(_day_orders(day)):
         d = out.setdefault(
             row["driver"],
             {
@@ -204,7 +265,7 @@ def settle_driver(driver, date=None):
             )
         )
 
-    from restaurant_pos.billing import create_invoice
+    from restaurant_pos.api.billing import create_invoice
 
     for d in docs:
         if not d.get("driver_settled"):

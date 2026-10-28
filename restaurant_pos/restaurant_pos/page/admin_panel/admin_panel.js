@@ -7,6 +7,9 @@ frappe.pages["admin-panel"].on_page_show = function (wrapper) {
 	if (wrapper.admin) wrapper.admin.refresh();
 };
 
+// صلاحيات إضافية تتدّي لكاشير (لازم تتطابق مع PERMISSIONS في api/auth.py). المفتاح : الاسم اللي يظهر
+const AD_PERMS = { discount: "Can give discounts" };
+
 class AdminPanel {
 	constructor(wrapper) {
 		this.page = wrapper.page;
@@ -30,7 +33,7 @@ class AdminPanel {
 	}
 
 	api(method, args) {
-		return frappe.xcall(`restaurant_pos.admin.${method}`, args || {});
+		return frappe.xcall(`restaurant_pos.api.admin.${method}`, args || {});
 	}
 
 	tabs() {
@@ -972,21 +975,21 @@ render_shell() {
 		r.on("click", ".ad-m-del", (e) => {
 			const name = $(e.currentTarget).closest("tr").attr("data-name");
 			frappe.confirm(__("Delete {0}? (items already sold are only hidden)", [name]), () =>
-				frappe.xcall("restaurant_pos.menu_admin.delete_item", { name }).then((res) => {
+				frappe.xcall("restaurant_pos.api.menu_admin.delete_item", { name }).then((res) => {
 					frappe.show_alert({ message: res === "hidden" ? __("Hidden from menu (used in orders)") : __("Deleted"), indicator: "orange" });
 					this.load_menu();
 				})
 			);
 		});
 		r.on("click", ".ad-m-restore", (e) =>
-			frappe.xcall("restaurant_pos.menu_admin.restore_item", { name: $(e.currentTarget).closest("tr").attr("data-name") }).then(() => this.load_menu())
+			frappe.xcall("restaurant_pos.api.menu_admin.restore_item", { name: $(e.currentTarget).closest("tr").attr("data-name") }).then(() => this.load_menu())
 		);
 		r.on("change", ".ad-mprice, .ad-mavail", (e) => {
 			const row = $(e.currentTarget).closest("tr");
 			const name = row.attr("data-name");
 			const rate = row.find(".ad-mprice").val();
 			const avail = row.find(".ad-mavail").is(":checked") ? 1 : 0;
-			frappe.xcall("restaurant_pos.menu_admin.quick_update", { name, standard_rate: rate, available_today: avail }).then(() => {
+			frappe.xcall("restaurant_pos.api.menu_admin.quick_update", { name, standard_rate: rate, available_today: avail }).then(() => {
 				const m = this.menu_rows.find((x) => x.name === name);
 				if (m) {
 					m.standard_rate = rate;
@@ -1050,6 +1053,7 @@ render_shell() {
 			r.find(".ad-u-name").val(u.full_name);
 			r.find(".ad-u-role").val(u.role);
 			r.find(".ad-u-pass").val("");
+				r.find(".ad-u-perm").each((_, el) => $(el).prop("checked", (u.perms || []).includes($(el).attr("data-p"))));
 		});
 		r.on("click", ".ad-u-save", () => {
 			this.api("save_user", {
@@ -1057,6 +1061,7 @@ render_shell() {
 				full_name: r.find(".ad-u-name").val(),
 				password: r.find(".ad-u-pass").val(),
 				role: r.find(".ad-u-role").val(),
+					permissions: r.find(".ad-u-perm:checked").map((_, el) => $(el).attr("data-p")).get(),
 			}).then(() => {
 				frappe.show_alert({ message: __("Saved"), indicator: "green" });
 				this.load_users();
@@ -1065,6 +1070,16 @@ render_shell() {
 		r.on("click", ".ad-u-toggle", (e) => {
 			const b = $(e.currentTarget);
 			this.api("save_user", { username: b.attr("data-u"), enabled: b.attr("data-en") }).then(() => this.load_users());
+		});
+
+		r.on("click", ".ad-u-del", (e) => {
+			const u = $(e.currentTarget).attr("data-u");
+			frappe.confirm(__("Delete user {0}? (users with sales history are only disabled)", [u]), () =>
+				this.api("delete_user", { username: u }).then((res) => {
+					frappe.show_alert({ message: res === "disabled" ? __("Disabled (has sales history)") : __("Deleted"), indicator: "orange" });
+					this.load_users();
+				})
+			);
 		});
 
 		r.on("input", ".ad-search", () => this.render_menu_table());
@@ -1248,7 +1263,7 @@ render_shell() {
 
 	// نداء السيرفر لتقرير نهاية اليوم (close=1 يقفل الكاشيرز)
 	api_eod(date, close) {
-		return frappe.xcall("restaurant_pos.dashboard.end_day", { date, close });
+		return frappe.xcall("restaurant_pos.api.dashboard.end_day", { date, close });
 	}
 
 	// طباعة التقرير المختصر بحجم إيصال 80mm
@@ -1311,7 +1326,7 @@ render_shell() {
 
 	load_dashboard() {
 		this.loading();
-		frappe.xcall("restaurant_pos.dashboard.report", { date_from: this.f.from, date_to: this.f.to }).then((d) => {
+		frappe.xcall("restaurant_pos.api.dashboard.report", { date_from: this.f.from, date_to: this.f.to }).then((d) => {
 			if (this.tab !== "dashboard") return;
 			const kpi = (ic, cls, l, v) =>
 				`<div class="ad-kpi"><div class="ad-kpi-ic ${cls}">${ic}</div><div><span>${l}</span><b>${v}</b></div></div>`;
@@ -1414,7 +1429,7 @@ render_shell() {
 	}
 
 	show_order(name) {
-		frappe.xcall("restaurant_pos.api.get_order", { name }).then((o) => {
+		frappe.xcall("restaurant_pos.api.orders.get_order", { name }).then((o) => {
 			const items = (o.items || [])
 				.map((i) => {
 					const x = i.kitchen_status === "Cancelled";
@@ -1451,9 +1466,13 @@ render_shell() {
 				`<b>${this.esc(u.username)}</b>`,
 				this.esc(u.full_name),
 				this.esc(u.role === "admin" ? __("Admin") : __("Cashier")),
+					u.role === "admin"
+						? `<span class="ad-sub">${__("All")}</span>`
+						: (u.perms || []).map((p) => `<span class="ad-badge">${this.esc(AD_PERMS[p] ? __(AD_PERMS[p]) : p)}</span>`).join(" ") || "–",
 				u.enabled ? "✓" : "✗",
 				`<button class="ad-btn ad-u-edit" data-u="${this.esc(u.username)}">${__("Edit")}</button>
-				 <button class="ad-btn ad-u-toggle" data-u="${this.esc(u.username)}" data-en="${u.enabled ? 0 : 1}">${u.enabled ? __("Disable") : __("Enable")}</button>`,
+				 <button class="ad-btn ad-u-toggle" data-u="${this.esc(u.username)}" data-en="${u.enabled ? 0 : 1}">${u.enabled ? __("Disable") : __("Enable")}</button>
+					 <button class="ad-btn danger ad-u-del" data-u="${this.esc(u.username)}">${__("Delete")}</button>`,
 			]);
 			this.body(`
 				<div class="ad-card"><h4>${__("Add / update user")}</h4><div class="ad-form" style="margin:0">
@@ -1461,9 +1480,12 @@ render_shell() {
 					<input class="ad-in ad-u-name" placeholder="${__("Full name")}">
 					<input class="ad-in ad-u-pass" type="password" placeholder="${__("Password (empty = keep)")}">
 					<select class="ad-in ad-u-role"><option value="cashier">${__("Cashier")}</option><option value="admin">${__("Admin")}</option></select>
+						${Object.entries(AD_PERMS)
+							.map(([k, l]) => `<label class="ad-sub" style="display:flex;gap:5px;align-items:center;margin:0"><input type="checkbox" class="ad-u-perm" data-p="${k}"> ${__(l)}</label>`)
+							.join("")}
 					<button class="ad-btn primary ad-u-save">${__("Save")}</button>
 				</div></div>
-				<div class="ad-card">${this.tbl([__("Username"), __("Name"), __("Role"), __("Active"), ""], data)}</div>`);
+				<div class="ad-card">${this.tbl([__("Username"), __("Name"), __("Role"), __("Permissions"), __("Active"), ""], data)}</div>`);
 		});
 	}
 
@@ -1472,7 +1494,7 @@ render_shell() {
 	// تحميل شاشة المنيو: أصناف + مجموعات + أزرار الإضافة
 	load_menu() {
 		this.loading();
-		frappe.xcall("restaurant_pos.menu_admin.data").then((d) => {
+		frappe.xcall("restaurant_pos.api.menu_admin.data").then((d) => {
 			if (this.tab !== "menu") return;
 			this.menu_rows = d.items;
 			this.menu_groups = d.groups;
@@ -1541,7 +1563,7 @@ render_shell() {
 			],
 			primary_action_label: __("Save"),
 			primary_action: (v) =>
-				frappe.xcall("restaurant_pos.menu_admin.save_item", { name: row ? row.name : null, data: v }).then(() => {
+				frappe.xcall("restaurant_pos.api.menu_admin.save_item", { name: row ? row.name : null, data: v }).then(() => {
 					d.hide();
 					frappe.show_alert({ message: __("Saved"), indicator: "green" });
 					this.load_menu();
@@ -1560,7 +1582,7 @@ render_shell() {
 			],
 			primary_action_label: __("Save"),
 			primary_action: (v) =>
-				frappe.xcall("restaurant_pos.menu_admin.save_group", { group_name: v.group_name, old: old || null, image: v.image || null }).then((n) => {
+				frappe.xcall("restaurant_pos.api.menu_admin.save_group", { group_name: v.group_name, old: old || null, image: v.image || null }).then((n) => {
 					d.hide();
 					this.menu_cat = n;
 					frappe.show_alert({ message: __("Saved"), indicator: "green" });
@@ -1570,7 +1592,7 @@ render_shell() {
 			secondary_action: old
 				? () =>
 						frappe.confirm(__("Delete group {0}?", [old]), () =>
-							frappe.xcall("restaurant_pos.menu_admin.delete_group", { name: old }).then(() => {
+							frappe.xcall("restaurant_pos.api.menu_admin.delete_group", { name: old }).then(() => {
 								d.hide();
 								this.menu_cat = "";
 								this.load_menu();
