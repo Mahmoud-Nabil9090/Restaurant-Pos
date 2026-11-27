@@ -222,6 +222,7 @@ class RestaurantCashier {
 		r.on("click", ".rp-type", (e) => this.set_type($(e.currentTarget).data("type")));
 		r.on("click", ".rp-plus", (e) => this.change_qty($(e.currentTarget).data("i"), 1));
 		r.on("click", ".rp-minus", (e) => this.change_qty($(e.currentTarget).data("i"), -1));
+		r.on("click", ".rp-remove-item", (e) => this.remove_item($(e.currentTarget).data("i")));
 		r.on("click", ".rp-note", (e) => this.edit_note($(e.currentTarget).data("i")));
 		r.on("click", ".rp-cancel-item", (e) => this.cancel_sent_item($(e.currentTarget).data("i")));
 		r.on("click", ".rp-edit-cust", () => {
@@ -306,7 +307,7 @@ class RestaurantCashier {
 		else box.html(this.menu_html(v));
 	}
 
-	// HTML كروت الترابيزات (فاضية/مشغولة)
+	// HTML كروت الترابيزات (فاضية/مشغولة) بتصميم متناسق ومدمج
 	tables_html() {
 		const head = `<div class="rp-crumb"><b>${__("Select a table")}</b></div>`;
 		if (!this.tables_loaded) return head + `<div class="rp-empty">${__("Loading...")}</div>`;
@@ -315,13 +316,15 @@ class RestaurantCashier {
 			.map((t) => {
 				const cls = t.status === "Occupied" ? "occupied" : t.status === "Reserved" ? "reserved" : "";
 				return `<button class="rp-tcard ${cls}" data-table="${this.esc(t.name)}">
-					<span class="rp-tname">${this.esc(t.table_name)}</span>
+					<div class="rp-tcard-header">
+						<span class="rp-tname">${this.esc(t.table_name)}</span>
+						<span class="rp-tstatus">${this.esc(__(t.status))}</span>
+					</div>
 					<span class="rp-tmeta">${this.esc(t.area)} · ${this.esc(t.capacity)} ${__("seats")}</span>
-					<span class="rp-tstatus">${this.esc(__(t.status))}</span>
 				</button>`;
 			})
 			.join("");
-		return head + `<div class="rp-cards">${cards}</div>`;
+		return head + `<div class="rp-cards rp-tables-grid">${cards}</div>`;
 	}
 
 	// تجهيز رابط الصورة ليصلح داخل background-image
@@ -465,13 +468,14 @@ class RestaurantCashier {
 				sum += amount;
 				return `<div class="rp-line">
 					<div class="row-top">
-						<span>${this.esc(row.item_name)}</span>
+						<span class="rp-line-name">${this.esc(row.item_name)}</span>
 						<span class="rp-qty">
 							<button class="rp-minus" data-i="${i}">−</button>
 							<b>${row.qty}</b>
 							<button class="rp-plus" data-i="${i}">+</button>
 						</span>
 						<b>${this.esc(this.money(amount))}</b>
+						<button class="rp-remove-item" data-i="${i}" title="${__("Remove item")}">✕</button>
 					</div>
 					<div>
 						<a class="rp-note" data-i="${i}">${row.notes ? "📝 " + this.esc(row.notes) : __("Add note")}</a>
@@ -620,6 +624,18 @@ class RestaurantCashier {
 				sent_to_kitchen: 0,
 				kitchen_status: "New",
 			});
+		this.render_cart();
+	}
+
+	// حذف صنف من السلة فوراً
+	remove_item(i) {
+		const row = this.order.items[i];
+		if (!row) return;
+		if (row.sent_to_kitchen) {
+			this.cancel_sent_item(i);
+			return;
+		}
+		this.order.items.splice(i, 1);
 		this.render_cart();
 	}
 
