@@ -1,0 +1,849 @@
+/* ═══════════════════════════════════════════════════════════
+   Admin Panel Styles — extracted from admin_panel.js
+   Frappe auto-loads {page_name}.css for each page.
+═══════════════════════════════════════════════════════════ */
+
+/* =========================================
+   1. THEME VARIABLES
+   Orange brand colors matching the login page
+========================================= */
+.ad-app {
+	--ad-bg: #f7f8fa;
+	--ad-card: #ffffff;
+	--ad-border: #e9eaf0;
+	--ad-text: #202534;
+	--ad-muted: #818797;
+	--ad-accent: #f97316;
+	--ad-accent-hover: #ea580c;
+	--ad-soft: #fff1e7;
+	--ad-input: #ffffff;
+	--ad-sidebar: #202534;
+	--ad-sidebar-hover: #303647;
+	--ad-shadow: 0 4px 20px rgba(32, 37, 52, .035);
+	color: var(--ad-text);
+	font-family: inherit;
+}
+
+/* Dark theme support */
+html[data-theme="dark"] .ad-app {
+	--ad-bg: #11141d;
+	--ad-card: #1b202c;
+	--ad-border: #2b3140;
+	--ad-text: #edf0f7;
+	--ad-muted: #9ba3b5;
+	--ad-soft: #38271f;
+	--ad-input: #171b25;
+	--ad-sidebar: #171b25;
+	--ad-sidebar-hover: #292f3e;
+	--ad-shadow: 0 4px 20px rgba(0, 0, 0, .12);
+}
+
+/* ثبات حجم الشريط العلوي + 3 كروت + رسم الساعات */
+	@media (min-width: 1101px) {
+		.ad-head { height: 92px; flex-wrap: nowrap; overflow: hidden; }
+		.ad-ctl { flex-wrap: nowrap; flex: none; }
+		.ad-head > div:first-child { min-width: 0; flex: 1; }
+		.ad-sub { height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+	}
+	.ad-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+	.ad-peak { display: flex; flex-wrap: wrap; gap: 22px; margin: -4px 0 14px; font-size: 12px; color: var(--ad-muted); }
+	.ad-peak b { color: var(--ad-text); }
+	.ad-vb-col.peak .ad-vb-bar { background: linear-gradient(180deg, #f97316, #c2410c); box-shadow: 0 3px 12px rgba(249, 115, 22, .35); }
+	.ad-vb-col:not(.peak) .ad-vb-bar { opacity: .72; }
+	.ad-vb-ord { font-size: 10px; color: var(--ad-text); font-weight: 700; margin-top: 3px; }
+
+	/* Remove default Frappe page backgrounds and spacing */
+body[data-route="admin-panel"],
+body[data-route="admin-panel"] .page-container,
+#page-admin-panel {
+	background: var(--ad-bg, #f7f8fa) !important;
+}
+
+body[data-route="admin-panel"] .container {
+	max-width: 100%;
+	padding: 0;
+}
+
+#page-admin-panel .layout-main-section {
+	background: transparent;
+	border: 0;
+	box-shadow: none;
+	padding: 0;
+}
+
+.ad-app,
+.ad-app * {
+	box-sizing: border-box;
+}
+
+.ad-app button,
+.ad-app input,
+.ad-app select {
+	font-family: inherit;
+}
+
+/* =========================================
+   2. SIDEBAR
+========================================= */
+.ad-side {
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	inset-inline-start: 0;
+	width: 250px;
+	background: var(--ad-sidebar);
+	color: #cbd0dc;
+	display: flex;
+	flex-direction: column;
+	padding: 26px 17px 18px;
+	gap: 9px;
+	z-index: 100;
+	overflow-y: auto;
+	box-shadow: 5px 0 24px rgba(20, 24, 35, .06);
+}
+
+/* Restaurant POS brand */
+.ad-brand {
+	font-size: 18px;
+	font-weight: 800;
+	color: #ffffff;
+	padding: 5px 9px 27px;
+	display: flex;
+	gap: 12px;
+	align-items: center;
+	letter-spacing: -.4px;
+}
+
+.ad-brand > span {
+	width: 44px;
+	height: 44px;
+	border-radius: 14px;
+	background: linear-gradient(135deg, #fb923c, #ea580c);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 24px !important;
+	box-shadow: 0 5px 16px rgba(249, 115, 22, .25);
+}
+
+.ad-brand small {
+	display: block;
+	font-size: 10px;
+	font-weight: 800;
+	color: #fb923c;
+	letter-spacing: 2px;
+	margin-top: 5px;
+}
+
+/* Sidebar navigation */
+.ad-nav {
+	display: flex;
+	flex-direction: column;
+	gap: 7px;
+}
+
+.ad-navbtn {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 13px;
+	min-height: 47px;
+	padding: 0 14px;
+	border-radius: 12px;
+	border: 1px solid transparent;
+	background: transparent;
+	color: #b8bfce;
+	font-size: 13px;
+	font-weight: 600;
+	cursor: pointer;
+	text-align: start;
+	transition: background .2s ease, color .2s ease;
+}
+
+.ad-navbtn:hover {
+	background: var(--ad-sidebar-hover);
+	color: #ffffff;
+}
+
+.ad-navbtn.active {
+	background: linear-gradient(110deg, #f97316, #ea580c);
+	color: #ffffff;
+	border-color: rgba(255, 255, 255, .09);
+	box-shadow: 0 5px 16px rgba(249, 115, 22, .19);
+}
+
+.ad-navbtn span {
+	width: 23px;
+	text-align: center;
+	font-size: 17px;
+}
+
+.ad-sp {
+	flex: 1;
+	min-height: 25px;
+}
+
+/* Current user information */
+.ad-user {
+	display: flex;
+	align-items: center;
+	gap: 11px;
+	padding: 13px 10px;
+	background: rgba(255, 255, 255, .055);
+	border: 1px solid rgba(255, 255, 255, .06);
+	border-radius: 14px;
+	margin-bottom: 8px;
+	min-width: 0;
+}
+
+.ad-avatar {
+	width: 41px;
+	height: 41px;
+	border-radius: 13px;
+	background: linear-gradient(135deg, #fb923c, #ea580c);
+	color: #ffffff;
+	font-weight: 800;
+	font-size: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+}
+
+.ad-user small {
+	display: block;
+	color: #929bad;
+	font-size: 10px;
+	margin-bottom: 4px;
+}
+
+.ad-user b {
+	display: block;
+	color: #ffffff;
+	font-size: 12px;
+	overflow-wrap: anywhere;
+}
+
+/* Sidebar action buttons */
+.ad-sidebtn {
+	min-height: 42px;
+	border-radius: 11px;
+	border: 1px solid rgba(255, 255, 255, .12);
+	background: transparent;
+	color: #d0d5e0;
+	font-weight: 600;
+	font-size: 12px;
+	cursor: pointer;
+	transition: background .2s ease;
+}
+
+.ad-sidebtn:hover {
+	background: var(--ad-sidebar-hover);
+}
+
+.ad-sidebtn.out {
+	border-color: rgba(248, 113, 113, .2);
+	background: rgba(239, 68, 68, .08);
+	color: #fca5a5;
+}
+
+.ad-sidebtn.out:hover {
+	background: #dc2626;
+	color: #ffffff;
+}
+
+/* =========================================
+   3. MAIN CONTENT AND PAGE HEADER
+========================================= */
+.ad-main {
+	margin-inline-start: 250px;
+	padding: 30px 32px 45px;
+	min-height: 100vh;
+	background: var(--ad-bg);
+	transition: background .2s ease;
+}
+
+.ad-head {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 18px;
+	margin-bottom: 27px;
+	padding-bottom: 23px;
+	border-bottom: 1px solid var(--ad-border);
+}
+
+.ad-head h2 {
+	margin: 0;
+	font-size: 27px;
+	font-weight: 800;
+	letter-spacing: -.8px;
+	color: var(--ad-text);
+}
+
+.ad-sub {
+	color: var(--ad-muted);
+	font-size: 12px;
+	margin-top: 8px;
+	line-height: 1.7;
+}
+
+.ad-ctl {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+/* =========================================
+   4. FILTERS AND BUTTONS
+========================================= */
+.ad-chip {
+	min-height: 37px;
+	padding: 0 14px;
+	border-radius: 10px;
+	border: 1px solid var(--ad-border);
+	background: var(--ad-card);
+	color: var(--ad-muted);
+	font-weight: 600;
+	font-size: 12px;
+	cursor: pointer;
+	transition: all .2s ease;
+}
+
+.ad-chip:hover {
+	border-color: var(--ad-accent);
+	color: var(--ad-accent);
+}
+
+.ad-chip.active {
+	background: var(--ad-accent);
+	border-color: var(--ad-accent);
+	color: #ffffff;
+	box-shadow: 0 4px 12px rgba(249, 115, 22, .15);
+}
+
+.ad-in {
+	min-height: 37px;
+	border-radius: 10px;
+	border: 1px solid var(--ad-border);
+	background: var(--ad-input);
+	color: var(--ad-text);
+	padding: 0 11px;
+	font-size: 12px;
+	outline: none;
+	transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.ad-in:focus {
+	border-color: var(--ad-accent);
+	box-shadow: 0 0 0 3px rgba(249, 115, 22, .10);
+}
+
+.ad-btn {
+	min-height: 35px;
+	padding: 0 13px;
+	border-radius: 9px;
+	font-weight: 700;
+	font-size: 12px;
+	cursor: pointer;
+	border: 1px solid var(--ad-border);
+	background: var(--ad-card);
+	color: var(--ad-text);
+	transition: all .2s ease;
+}
+
+.ad-btn:hover {
+	border-color: var(--ad-accent);
+	color: var(--ad-accent);
+}
+
+.ad-btn.primary {
+	background: var(--ad-accent);
+	border-color: var(--ad-accent);
+	color: #ffffff;
+}
+
+.ad-btn.primary:hover {
+	background: var(--ad-accent-hover);
+	color: #ffffff;
+}
+
+.ad-btn.danger {
+	color: #dc2626;
+}
+
+.ad-btn.danger:hover {
+	background: #fef2f2;
+	border-color: #fecaca;
+}
+
+/* =========================================
+   5. DASHBOARD SUMMARY CARDS
+========================================= */
+.ad-kpis {
+	display: grid;
+	grid-template-columns: repeat(5, minmax(0, 1fr));
+	gap: 15px;
+	margin-bottom: 23px;
+}
+
+.ad-kpi {
+	position: relative;
+	background: var(--ad-card);
+	border: 1px solid var(--ad-border);
+	border-radius: 17px;
+	padding: 19px 16px;
+	display: flex;
+	gap: 13px;
+	align-items: center;
+	min-width: 0;
+	box-shadow: var(--ad-shadow);
+	transition: transform .2s ease, border-color .2s ease;
+}
+
+.ad-kpi:hover {
+	transform: translateY(-3px);
+	border-color: rgba(249, 115, 22, .45);
+}
+
+.ad-kpi-ic {
+	width: 46px;
+	height: 46px;
+	border-radius: 14px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 21px;
+	flex: none;
+}
+
+/* KPI icon colors */
+.c-green { background: rgba(34, 197, 94, .12); }
+.c-blue { background: rgba(59, 130, 246, .12); }
+.c-purple { background: rgba(139, 92, 246, .12); }
+.c-red { background: rgba(239, 68, 68, .12); }
+.c-orange { background: rgba(249, 115, 22, .13); }
+
+.ad-kpi span {
+	display: block;
+	color: var(--ad-muted);
+	font-size: 11px;
+	font-weight: 600;
+	margin-bottom: 7px;
+}
+
+.ad-kpi b {
+	display: block;
+	font-size: clamp(15px, 1.35vw, 21px);
+	font-weight: 800;
+	line-height: 1.35;
+	overflow-wrap: anywhere;
+}
+
+/* =========================================
+   6. CONTENT CARDS AND DATA GRIDS
+========================================= */
+.ad-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 19px;
+	align-items: stretch;
+}
+
+.ad-grid .ad-card {
+	margin-bottom: 0;
+	min-width: 0;
+}
+
+.ad-card {
+	background: var(--ad-card);
+	border: 1px solid var(--ad-border);
+	border-radius: 17px;
+	padding: 22px;
+	margin-bottom: 19px;
+	overflow-x: auto;
+	box-shadow: var(--ad-shadow);
+}
+
+.ad-card h4 {
+	margin: 0 0 19px;
+	font-size: 14px;
+	font-weight: 800;
+	color: var(--ad-text);
+	letter-spacing: -.2px;
+}
+
+.ad-empty {
+	color: var(--ad-muted);
+	padding: 25px 8px;
+	text-align: center;
+	font-size: 13px;
+}
+
+/* =========================================
+   7. DATA TABLES
+========================================= */
+.ad-table {
+	width: 100%;
+	border-collapse: separate;
+	border-spacing: 0;
+	font-size: 12px;
+	color: var(--ad-text);
+}
+
+.ad-table th {
+	text-align: start;
+	color: var(--ad-muted);
+	font-weight: 700;
+	font-size: 10px;
+	letter-spacing: .35px;
+	padding: 12px 10px;
+	border-bottom: 1px solid var(--ad-border);
+	white-space: nowrap;
+	background: var(--ad-bg);
+}
+
+.ad-table th:first-child {
+	border-radius: 8px 0 0 0;
+}
+
+.ad-table td {
+	padding: 14px 10px;
+	border-bottom: 1px solid var(--ad-border);
+	vertical-align: middle;
+}
+
+.ad-table tbody tr {
+	transition: background .15s ease;
+}
+
+.ad-table tbody tr:hover {
+	background: var(--ad-soft);
+}
+
+.ad-table tbody tr:last-child td {
+	border-bottom: 0;
+}
+
+/* Order status badges */
+.ad-badge {
+	display: inline-flex;
+	align-items: center;
+	font-size: 10px;
+	font-weight: 800;
+	padding: 5px 10px;
+	border-radius: 7px;
+	background: var(--ad-soft);
+	color: var(--ad-muted);
+	white-space: nowrap;
+}
+
+.b-Open {
+	background: #fff4df;
+	color: #b77909;
+}
+
+.b-SenttoKitchen {
+	background: #e8f2ff;
+	color: #2875c7;
+}
+
+.b-Served {
+	background: #f1eaff;
+	color: #8050c5;
+}
+
+.b-Billed {
+	background: #e4f8ec;
+	color: #21834a;
+}
+
+.b-Cancelled {
+	background: #ffe9e9;
+	color: #d33838;
+}
+
+/* =========================================
+   8. CHARTS
+========================================= */
+.ad-hb {
+	margin-bottom: 17px;
+}
+
+.ad-hb-top {
+	display: flex;
+	justify-content: space-between;
+	gap: 10px;
+	font-size: 12px;
+	margin-bottom: 8px;
+	color: var(--ad-text);
+}
+
+.ad-hb-top b {
+	font-weight: 700;
+}
+
+.ad-hb-track {
+	height: 7px;
+	border-radius: 10px;
+	background: var(--ad-soft);
+	overflow: hidden;
+}
+
+.ad-hb-fill {
+	height: 100%;
+	border-radius: 10px;
+	background: linear-gradient(90deg, #fb923c, #ea580c);
+	transition: width .35s ease;
+}
+
+.ad-vb {
+	display: flex;
+	align-items: stretch;
+	gap: 10px;
+	height: 220px;
+	padding-top: 8px;
+}
+
+.ad-vb-col {
+	flex: 1;
+	min-width: 18px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.ad-vb-wrap {
+	flex: 1;
+	width: 100%;
+	display: flex;
+	align-items: flex-end;
+	border-bottom: 1px solid var(--ad-border);
+	background: linear-gradient(to bottom, transparent 24%, var(--ad-bg) 25%, transparent 26%);
+}
+
+.ad-vb-bar {
+	width: 100%;
+	max-width: 38px;
+	margin: 0 auto;
+	border-radius: 7px 7px 2px 2px;
+	background: linear-gradient(180deg, #fb923c, #ea580c);
+	box-shadow: 0 3px 9px rgba(249, 115, 22, .13);
+	transition: height .3s ease;
+}
+
+.ad-vb-val {
+	font-size: 10px;
+	color: var(--ad-muted);
+	margin-bottom: 6px;
+}
+
+.ad-vb-lbl {
+	font-size: 10px;
+	color: var(--ad-muted);
+	margin-top: 8px;
+	white-space: nowrap;
+}
+
+/* =========================================
+   9. MANAGEMENT SHORTCUTS AND FORMS
+========================================= */
+.ad-form {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	align-items: center;
+	margin-bottom: 16px;
+}
+
+.ad-links {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 15px;
+}
+
+.ad-link {
+	min-height: 88px;
+	border-radius: 15px;
+	border: 1px solid var(--ad-border);
+	background: var(--ad-card);
+	color: var(--ad-text);
+	font-weight: 700;
+	font-size: 13px;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	gap: 13px;
+	padding: 16px;
+	text-align: start;
+	box-shadow: var(--ad-shadow);
+	transition: transform .2s ease, border-color .2s ease, background .2s ease;
+}
+
+.ad-link:hover {
+	border-color: var(--ad-accent);
+	background: var(--ad-soft);
+	transform: translateY(-2px);
+}
+
+.ad-link i {
+	font-style: normal;
+	font-size: 25px;
+	width: 43px;
+	height: 43px;
+	border-radius: 12px;
+	background: var(--ad-soft);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+}
+
+.ad-x {
+	opacity: .55;
+	text-decoration: line-through;
+}
+
+/* =========================================
+   10. RESPONSIVE LAYOUT
+========================================= */
+@media (max-width: 1400px) {
+	.ad-kpis {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+
+	.ad-links {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 1100px) {
+	.ad-side {
+		width: 220px;
+	}
+
+	.ad-main {
+		margin-inline-start: 220px;
+		padding: 24px 20px 35px;
+	}
+
+	.ad-kpis {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.ad-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 760px) {
+	.ad-side {
+		position: relative;
+		top: auto;
+		bottom: auto;
+		width: 100%;
+		padding: 15px;
+		gap: 10px;
+	}
+
+	.ad-brand {
+		padding: 3px 5px 10px;
+	}
+
+	.ad-nav {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 6px;
+	}
+
+	.ad-navbtn {
+		min-height: 42px;
+		padding: 0 9px;
+		font-size: 12px;
+	}
+
+	.ad-sp {
+		display: none;
+	}
+
+	.ad-user {
+		margin-top: 5px;
+	}
+
+	.ad-main {
+		margin-inline-start: 0;
+		padding: 22px 14px 30px;
+		min-height: 0;
+	}
+
+	.ad-head {
+		align-items: flex-start;
+		margin-bottom: 20px;
+		padding-bottom: 18px;
+	}
+
+	.ad-head h2 {
+		font-size: 23px;
+	}
+
+	.ad-ctl {
+		width: 100%;
+	}
+
+	.ad-ctl .ad-chip,
+	.ad-ctl .ad-in {
+		max-width: 100%;
+	}
+
+	.ad-kpis {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 10px;
+	}
+
+	.ad-kpi {
+		padding: 13px 11px;
+		gap: 9px;
+		border-radius: 13px;
+	}
+
+	.ad-kpi-ic {
+		width: 36px;
+		height: 36px;
+		border-radius: 10px;
+		font-size: 17px;
+	}
+
+	.ad-kpi b {
+		font-size: 15px;
+	}
+
+	.ad-card {
+		padding: 15px;
+		border-radius: 14px;
+	}
+
+	.ad-links {
+		grid-template-columns: 1fr;
+	}
+
+	.ad-form {
+		align-items: stretch;
+	}
+
+	.ad-form .ad-in {
+		width: 100%;
+		max-width: 100%;
+	}
+}
+
+@media (max-width: 380px) {
+	.ad-kpis {
+		grid-template-columns: 1fr;
+	}
+
+	.ad-nav {
+		grid-template-columns: 1fr;
+	}
+}

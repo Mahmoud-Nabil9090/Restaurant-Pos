@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 256" width="980" height="256">
+  <title>Daghta - Smart POS</title>
+  <g>
+    <rect width="256" height="256" rx="58" fill="#14213D"/>
+    <path d="M92 64 H126 A64 64 0 0 1 126 192 H92 Z" fill="none" stroke="#FFFFFF" stroke-width="28" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="132" cy="128" r="30" fill="none" stroke="#FCA311" stroke-width="5" opacity="0.5"/>
+    <circle cx="132" cy="128" r="17" fill="#FCA311"/>
+  </g>
+  <text x="296" y="132" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="108" font-weight="800" fill="#14213D" letter-spacing="-2">Daghta</text>
+  <text x="298" y="196" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="40" font-weight="600" fill="#FCA311" letter-spacing="14">SMART POS</text>
+  <line x1="716" y1="70" x2="716" y2="196" stroke="#14213D" stroke-opacity="0.2" stroke-width="3"/>
+  <text x="960" y="152" text-anchor="end" font-family="'Segoe UI', Tahoma, Arial, sans-serif" font-size="76" font-weight="800" fill="#14213D">ضغطة</text>
+</svg>

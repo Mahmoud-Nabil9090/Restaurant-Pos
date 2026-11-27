@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f8f5f0">
+    <title>Daghta | Sign in</title>
+    <link rel="stylesheet" href="login.css">
+    <script src="login.js" defer></script>
+</head>
+<body>
+<main class="layout">
+
+    <section class="panel">
+        <button class="theme-toggle" type="button"
+                aria-label="Switch theme" title="Switch theme">
+            <span class="theme-symbol">☾</span>
+            <span class="theme-text">Dark mode</span>
+        </button>
+
+        <div class="stack">
+            <!-- اللوجو: بيظهر فوق الفورم في النص -->
+            <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 256" role="img" aria-label="Daghta - Smart POS">
+              <g>
+                <rect class="bg" width="256" height="256" rx="58" fill="#14213D"/>
+                <path d="M92 64 H126 A64 64 0 0 1 126 192 H92 Z" fill="none" stroke="#FFFFFF" stroke-width="28" stroke-linejoin="round" stroke-linecap="round"/>
+                <circle cx="132" cy="128" r="30" fill="none" stroke="#FCA311" stroke-width="5" opacity="0.5"/>
+                <circle cx="132" cy="128" r="17" fill="#FCA311"/>
+              </g>
+              <text x="296" y="132" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="108" font-weight="800" class="t" letter-spacing="-2">Daghta</text>
+              <text x="298" y="196" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="40" font-weight="600" fill="#FCA311" letter-spacing="14">SMART POS</text>
+              <line x1="716" y1="70" x2="716" y2="196" class="sep" stroke-opacity="0.2" stroke-width="3"/>
+              <text x="960" y="152" text-anchor="end" font-family="'Segoe UI', Tahoma, Arial, sans-serif" font-size="76" font-weight="800" class="t">ضغطة</text>
+            </svg>
+
+        <form class="login-card" id="login-form" autocomplete="on">
+            <div class="card-heading">
+                <h2>Welcome back<span class="period">.</span></h2>
+                <p class="subtitle">
+                    Sign in to your workspace and get your shift started.
+                </p>
+            </div>
+
+            <div class="field">
+                <label for="username">USERNAME</label>
+                <div class="input-wrap">
+                    <span class="input-icon">♙</span>
+                    <input id="username" name="usr" type="text"
+                           placeholder="Enter your username"
+                           autocomplete="username"
+                           autocapitalize="none"
+                           spellcheck="false" required autofocus>
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="password">PASSWORD</label>
+                <div class="input-wrap">
+                    <span class="input-icon">⌑</span>
+                    <input id="password" name="pwd" type="password"
+                           placeholder="Enter your password"
+                           autocomplete="current-password" required>
+                    <button class="password-toggle" id="password-toggle"
+                            type="button" aria-label="Show password"
+                            aria-pressed="false">◉</button>
+                </div>
+            </div>
+
+            <div class="error-message" id="error-message"
+                 role="alert" hidden>
+                <span>!</span>
+                <span id="error-text"></span>
+            </div>
+
+            <button class="submit-button" id="submit-button" type="submit">
+                <span id="submit-label">Sign in to workspace</span>
+                <span class="arrow">→</span>
+            </button>
+        </form>
+        </div>
+    </section>
+</main>
+
+<div class="splash" id="welcome-splash" aria-live="polite">
+    <img class="splash-mark" src="/assets/restaurant_pos/images/daghta-icon.svg" alt="">
+    <h2>Welcome, <span id="welcome-name"></span></h2>
+    <p>Opening your workspace…</p>
+    <div class="progress"><span></span></div>
+</div>
+</body>
+</html>

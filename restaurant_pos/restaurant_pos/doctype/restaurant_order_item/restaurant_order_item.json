@@ -1,0 +1,109 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-10-18 15:47:51.029311",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "item",
+  "item_name",
+  "qty",
+  "column_break_diuz",
+  "rate",
+  "amount",
+  "section_break_rmjx",
+  "notes",
+  "section_break_phzt",
+  "kitchen_station",
+  "kitchen_status",
+  "sent_to_kitchen"
+ ],
+ "fields": [
+  {
+   "fieldname": "item",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "item",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "item.item_name",
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "label": "item_name",
+   "read_only": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "qty"
+  },
+  {
+   "fieldname": "column_break_diuz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "rate",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "rate"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "label": "amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_rmjx",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "notes"
+  },
+  {
+   "fieldname": "section_break_phzt",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "kitchen_station",
+   "fieldtype": "Link",
+   "label": "kitchen_station",
+   "options": "Kitchen Station"
+  },
+  {
+   "default": "New",
+   "fieldname": "kitchen_status",
+   "fieldtype": "Select",
+   "label": "kitchen_status",
+   "options": "New\nPreparing\nReady\nServed\nCancelled"
+  },
+  {
+   "default": "0",
+   "fieldname": "sent_to_kitchen",
+   "fieldtype": "Check",
+   "label": "sent_to_kitchen",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-10-18 15:56:30.948371",
+ "modified_by": "Administrator",
+ "module": "Restaurant POS",
+ "name": "Restaurant Order Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

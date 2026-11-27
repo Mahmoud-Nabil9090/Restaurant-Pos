@@ -1,0 +1,17 @@
+
+# أسرار محلية
+*.bak
+*.bak*
+*.egg-info
+*.local.json
+*.pyc
+*.swp
+.DS_Store
+__pycache__
+__pycache__/
+node_modules
+node_modules/
+restaurant_pos/public/dist/
+restaurant_pos/public/receipt_preview/
+tags
+users.local.json

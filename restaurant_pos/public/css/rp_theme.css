@@ -1,0 +1,59 @@
+
+:root { --rp-bg:#f3f4f7; --rp-card:#fff; --rp-soft:#f9fafb; --rp-border:#e5e7eb; --rp-border2:#d1d5db; --rp-text:#1f2937; --rp-muted:#6b7280; --rp-hover:#f3f4f6; }
+html[data-theme="dark"] { --rp-bg:#0f1218; --rp-card:#1a1f29; --rp-soft:#222834; --rp-border:#2b3240; --rp-border2:#3a4252; --rp-text:#e5e7eb; --rp-muted:#9aa3b2; --rp-hover:#222834; }
+
+.rp-theme-btn { position:fixed; bottom:16px; inset-inline-start:16px; z-index:1050; width:42px; height:42px; border-radius:50%; border:1px solid var(--rp-border2); background:var(--rp-card); color:var(--rp-text); font-size:18px; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.2); }
+body.rp-cashier .search-bar, body.rp-cashier .sidebar-toggle-btn { display:none !important; }
+
+html[data-theme="dark"] :is(body[data-route="cashier"], body[data-route="cashier"] .page-container, #page-cashier,
+  body[data-route="delivery-orders"], body[data-route="delivery-orders"] .page-container, #page-delivery-orders) { background: var(--rp-bg) !important; }
+html[data-theme="dark"] :is(#page-cashier, #page-delivery-orders) .page-head { background: var(--rp-card); border-color: var(--rp-border); }
+html[data-theme="dark"] :is(.rp, .dv) { color: var(--rp-text); }
+
+html[data-theme="dark"] :is(.rp-tcard, .rp-cat, .rp-item, .rp-link, .rp-cartbox, .rp-form, .rp-qty button,
+  .rp-type:not(.active), .rp-actions button:not(.rp-send):not(.rp-pay):not(.rp-cancel),
+  .rp-form-foot button:not(.rp-form-ok), .dv-list, .dv-panel, .dv-drv, .dv-tab:not(.active),
+  .dv-chip:not(.active), .dv-btn:not(.primary):not(.ok):not(.danger), .dv-date, .dv-driver)
+  { background: var(--rp-card); border-color: var(--rp-border2); color: var(--rp-text); }
+html[data-theme="dark"] :is(.rp-tcard, .rp-cat, .rp-item, .rp-link):hover { border-color:#f97316; }
+html[data-theme="dark"] .dv-drv.active { border-color:#f97316; }
+
+html[data-theme="dark"] :is(.rp-cust, .rp-form input, .rp-form textarea) { background: var(--rp-soft); border-color: var(--rp-border2); color: var(--rp-text); }
+html[data-theme="dark"] :is(.rp-form input:focus, .rp-form textarea:focus) { background: var(--rp-card); }
+html[data-theme="dark"] .rp-cust b { color: var(--rp-text); }
+html[data-theme="dark"] :is(.rp-tmeta, .rp-capt span, .rp-note, .rp-label, .rp-empty, .rp-head small, .rp-form label, .rp-board, .dv-muted, .dv-empty, .dv-table th) { color: var(--rp-muted); }
+html[data-theme="dark"] .rp-totals { border-top-color:#4b5563; }
+html[data-theme="dark"] :is(.rp-line, .dv-table td, .dv-table th) { border-bottom-color: var(--rp-border); }
+html[data-theme="dark"] .dv-list .dv-table tbody tr:hover { background: var(--rp-hover); }
+html[data-theme="dark"] .dv-sep { background: var(--rp-border2); }
+
+html[data-theme="dark"] .rp-tstatus { background:#14352a; color:#6ee7a8; }
+html[data-theme="dark"] .rp-tcard.occupied { background:#2c1a1d; border-color:#6b2a30; }
+html[data-theme="dark"] .rp-tcard.occupied .rp-tstatus { background:#4a2024; color:#fca5a5; }
+html[data-theme="dark"] .rp-tcard.reserved .rp-tstatus { background:#3f3414; color:#fcd34d; }
+html[data-theme="dark"] .dv-badge { background:#2b3240; color:#d1d5db; }
+html[data-theme="dark"] .dv-badge.pending { background:#3f3414; color:#fcd34d; }
+html[data-theme="dark"] .dv-badge.out { background:#1e3a5f; color:#93c5fd; }
+html[data-theme="dark"] .dv-badge.done { background:#14352a; color:#6ee7a8; }
+
+
+
+/* ---- شريط الكاشير/الدليفري ---- */
+body.rp-kiosk header.navbar { background: var(--rp-card) !important; border-bottom: 1px solid var(--rp-border); }
+body.rp-kiosk header.navbar .container > *:not(.rp-top) { display: none !important; }
+.rp-top { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 50px; }
+.rp-top-brand { font-weight: 800; font-size: 16px; color: #ea580c; }
+.rp-top-welcome { color: var(--rp-muted); font-size: 14px; margin-inline-start: 14px; }
+.rp-top-welcome b { color: var(--rp-text); }
+.rp-top-sp { flex: 1; }
+.rp-top-btn { height: 34px; padding: 0 14px; border-radius: 17px; border: 1px solid var(--rp-border2); background: var(--rp-card); color: var(--rp-text); font-weight: 700; font-size: 13px; cursor: pointer; }
+.rp-top-btn:hover { border-color: #f97316; color: #ea580c; }
+.rp-top-out { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+.rp-top-out:hover { background: #dc2626; border-color: #dc2626; color: #fff; }
+html[data-theme="dark"] .rp-top-out { background: #2c1a1d; border-color: #6b2a30; color: #fca5a5; }
+html[data-theme="dark"] .rp-top-out:hover { background: #dc2626; border-color: #dc2626; color: #fff; }
+@media (max-width: 700px) { .rp-top-brand, .rp-top-welcome { display: none; } }
+
+/* ---- لوحة الإدارة بتخفي شريط النظام تمامًا ---- */
+body[data-route="admin-panel"] header.navbar { display: none !important; }
+body[data-route="admin-panel"] .page-head { display: none !important; }
