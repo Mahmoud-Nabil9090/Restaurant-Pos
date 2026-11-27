@@ -23,7 +23,15 @@
 
 	function logout() {
 		frappe.confirm(__("Log out?"), () => {
-			frappe.call({ method: "logout" }).always(() => (window.location.href = "/login"));
+			frappe.call({
+				method: "logout",
+				callback: () => {
+					window.location.replace("/pos-login");
+				},
+				error: () => {
+					window.location.replace("/pos-login");
+				}
+			});
 		});
 	}
 

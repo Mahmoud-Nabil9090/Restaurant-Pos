@@ -47,6 +47,7 @@ def require_admin():
 def boot_session(bootinfo):
     """بعد الدخول: الأدمن يفتح على admin-panel والكاشير على cashier."""
     if frappe.session.user == "Guest":
+        bootinfo["home_page"] = "pos-login"
         return
     roles = frappe.get_roles()
     if ADMIN in roles:

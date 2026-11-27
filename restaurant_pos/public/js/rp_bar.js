@@ -46,7 +46,15 @@
 	// تسجيل الخروج: يسأل، يخرج، ويرجّعك لصفحة الدخول
 	function logout() {
 		frappe.confirm(__("Log out?"), () => {
-			frappe.call({ method: "logout", callback: () => (window.location.href = "/pos-login") });
+			frappe.call({
+				method: "logout",
+				callback: () => {
+					window.location.replace("/pos-login");
+				},
+				error: () => {
+					window.location.replace("/pos-login");
+				}
+			});
 		});
 	}
 

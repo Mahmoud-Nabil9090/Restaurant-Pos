@@ -259,7 +259,7 @@ website_redirects = [
     {"source": "/login", "target": "/pos-login"},
 ]
 
-# home_page = "pos-login"
+home_page = "pos-login"
 
 boot_session = "restaurant_pos.api.auth.boot_session"
 
