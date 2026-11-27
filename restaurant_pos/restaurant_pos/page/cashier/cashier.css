@@ -4,10 +4,10 @@ body[data-route="cashier"] .page-container,
 body[data-route="cashier"] .container { max-width: 100%; }
 /* شريط العنوان (Restaurant Cashier) مخفي عشان الشاشة تكفي من غير scroll */
 #page-cashier .page-head { display: none !important; }
-body[data-route="cashier"] .page-body, body[data-route="cashier"] .layout-main {margin-top: 10px; margin: 0; padding: 0; }
+body[data-route="cashier"] .page-body, body[data-route="cashier"] .layout-main { margin: 0; padding: 0; }
 #page-cashier .layout-main-section { background: transparent; border: 0; box-shadow: none; padding: 0; }
 
-.rp { box-sizing: border-box; display: flex; gap: 12px; height: calc(100vh - 84px); min-height: 0; overflow: hidden; align-items: stretch; color: #1f2937; padding-top: 10px; }
+.rp { box-sizing: border-box; display: flex; gap: 14px; height: calc(100vh - 64px); min-height: 0; overflow: hidden; align-items: stretch; color: #1f2937; margin-top: 54px; padding: 0 14px 10px 14px; }
 .rp button, .rp input, .rp textarea { font-family: inherit; }
 .rp-label { font-size: 12px; font-weight: 700; color: #6b7280; letter-spacing: .06em; margin-bottom: 8px; }
 
