@@ -1,5 +1,5 @@
 """التجهيز التلقائي عند تثبيت التطبيق: الأدوار + البروفايل المالي + اللوجو + الفهارس."""
-import Frappe 
+import frappe
 
 
 def after_install():
@@ -38,6 +38,6 @@ def after_install():
     except Exception as e:
         print(f"✗ hardening: {e}")
 
-    Frappe.db.commit()
-    Frappe.clear_cache()
+    frappe.db.commit()
+    frappe.clear_cache()
     print("Restaurant POS installation complete!")
